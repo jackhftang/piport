@@ -1,0 +1,24 @@
+{
+  "name": "piport",
+  "version": "0.1.0",
+  "description": "reactive programming made easy",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "examle": "example",
+    "test": "test"
+  },
+  "scripts": {
+    "doc": "./node_modules/.bin/jsdoc -d ./doc -r ./src -t ./node_modules/minami ./README.md",
+    "test": "nyc mocha"
+  },
+  "author": "Jack Tang <me@jackhftang.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "jsdoc": "^3.5.5",
+    "nyc": "^11.3.0",
+    "minami": "^1.2.3"
+  },
+  "dependencies": {
+  }
+}
