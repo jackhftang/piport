@@ -16,15 +16,12 @@ class ValuePort extends Port {
    * @param {?{historySize: number}} option
    * @param {?Pipe} pipe
    */
-  constructor(option = {}, pipe) {
+  constructor(option = {}, pipe = null) {
     super(option, pipe);
     this.option = Object.assign({historySize: 1}, this.option);
     this.size = this.option.historySize;
     this.ix = 0;   // position of eldest element in memory
     this.history = [];
-  }
-
-  onStart() {
     this.connectToUpstream();
   }
 
@@ -32,6 +29,10 @@ class ValuePort extends Port {
     this._nexts.set(id, next);
 
     // send out history immediately
+    this.pull(next);
+  }
+
+  pull(next) {
     let {history, ix, size} = this;
     for (let i = ix; i < history.length; i++) {
       next(history[i % size]);
@@ -51,10 +52,6 @@ class ValuePort extends Port {
     }
   }
 
-  build(transform) {
-    let pipe = transform(this.pipe());
-    return new this.constructor(this.option, pipe);
-  }
 }
 
 module.exports = ValuePort;

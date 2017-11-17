@@ -9,13 +9,13 @@ class Port {
    * @param {?Object} option
    * @param {?Pipe} upstream
    */
-  constructor(option = {}, upstream) {
+  constructor(option = {}, upstream = null) {
     this.option = Object.assign({}, option);
     this._count = 0;
     this._nexts = new Map();
     this._upstream = upstream;
     this._disconnect = null;
-    this.onStart();
+    this._pipe = null;
   }
 
   _broadcast(v) {
@@ -29,11 +29,11 @@ class Port {
   }
 
   pipe() {
-    return new Pipe(next => {
-      let id = this._count++;
-      this.onConnection(id, next);
-      return () => this.onDisconnection(id);
-    })
+    return this._pipe || (this._pipe = new Pipe(next => {
+        let id = this._count++;
+        this.onConnection(id, next);
+        return () => this.onDisconnection(id);
+      }));
   }
 
   connect(action) {
@@ -42,7 +42,7 @@ class Port {
   }
 
   connectToUpstream() {
-    if (this._upstream) {
+    if (!this._disconnect && this._upstream) {
       this._disconnect = this._upstream.connect(v => {
         this.onValueFromUpstream(v);
       });
@@ -59,9 +59,6 @@ class Port {
   build(transform) {
     let pipe = transform(this.pipe());
     return new this.constructor(this.option, pipe);
-  }
-
-  onStart() {
   }
 
   onConnection(id, next) {

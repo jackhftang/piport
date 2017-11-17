@@ -8,10 +8,6 @@ const Port = require('./Port');
  */
 class EventPort extends Port {
 
-  onStart() {
-    // do nothing
-  }
-
   onConnection(id, next) {
     this._nexts.set(id, next);
     if (this._nexts.size === 1) {
