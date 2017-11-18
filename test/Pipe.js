@@ -39,6 +39,10 @@ let p = console.log.bind(console);
 //   }
 // }
 
+function testOneByOne(inSeq, outSeq, transform, callback) {
+
+}
+
 function test(inSeq, outSeq, transform, option) {
   option = Object.assign({nDisconnectCalled: 1}, option);
   let nDisconnectCalled = 0;
@@ -185,6 +189,21 @@ describe('Pipe', function () {
       })
     });
 
+    describe('delay', function(){
+
+      it('delay 1', function(){
+        test([1,2,3,4,5], [1,2,3,4], pipe => pipe.delay())
+      });
+
+      it('delay 2', function(){
+        test([1,2,3,4,5], [1,2,3], pipe => pipe.delay(2))
+      });
+
+      it('delay 3', function(){
+        test([1,2,3,4,5], [1,2], pipe => pipe.delay(3))
+      })
+    });
+
     describe('filter', function () {
       it('odd', function () {
         test([1, 2, 3, 4, 5], [1, 3, 5], pipe => pipe.filter(x => x % 2 === 1))
@@ -312,28 +331,28 @@ describe('Pipe', function () {
       })
 
     });
-    describe('splitKeys', function () {
+    describe('plucks', function () {
 
       it.skip('', function () {
 
       })
 
     });
-    describe('toggle', function () {
+    describe('block', function () {
 
       it.skip('', function () {
 
       })
 
     });
-    describe('toggleRecoverAll', function () {
+    describe('blockBufferAll', function () {
 
       it.skip('', function () {
 
       })
 
     });
-    describe('toggleRecoverLast', function () {
+    describe('blockBufferLast', function () {
 
       it.skip('', function () {
 

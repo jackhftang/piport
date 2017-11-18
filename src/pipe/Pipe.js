@@ -1,30 +1,12 @@
+const Buffer = require('../struct/Buffer');
+
 /** Class representing a pipe */
 class Pipe {
 
   /**
-   * Cleanup resource allocated on connection
-   * @callback DisconnectFunction
-   *
-   */
-
-  /**
-   *
-   * @callback NextFunction
-   * @param value
-   */
-
-  /**
-   *
-   *
-   * @callback ConnectFunction
-   * @param {NextFunction} next
-   * @return {DisconnectFunction} disconnect
-   */
-
-  /**
    *
    * @constructor
-   * @param {!ConnectFunction} connect
+   * @param {!Function} connect
    */
   constructor(connect) {
     if (typeof connect !== 'function') {
@@ -51,17 +33,21 @@ class Pipe {
 
 /**
  *
- * @param {Function} func
+ * @param {Function} producer
  * @returns {Pipe}
  */
-Pipe.create = function (func) {
-  return new this(func);
+Pipe.create = function (producer) {
+  return new this(producer);
 };
 
-Pipe.createScoped = function (func) {
-  return new this(func());
-};
+// Pipe.createScoped = function (func) {
+//   return new this(func());
+// };
 
+/**
+ *
+ * @returns {Pipe}
+ */
 Pipe.empty = function () {
   return new this(function () {
     return function () {
@@ -69,6 +55,11 @@ Pipe.empty = function () {
   });
 };
 
+/**
+ *
+ * @param args
+ * @returns {Pipe}
+ */
 Pipe.of = function (...args) {
   return new this(function (next) {
     for (let arg of args) next(arg);
@@ -88,37 +79,12 @@ Pipe.from = function (iterable) {
   })
 };
 
-// if do not want to emit value on error, catch it in promise.
-Pipe.fromPromise = function (promise, onError) {
-  if (!onError) onError = function (err, next) {
-    throw err;
-  };
-  return new this(function (next) {
-    promise.then(x => next(x)).catch(err => onError(err, next));
-    return function () {
-      // release reference to variable
-      promise = null;
-    }
-  })
-};
-
 Pipe.range = function (start, end, step = 1) {
   return new this(function (next) {
     for (let i = start; i < end; i += step) next(i);
     return function () {
     };
   });
-};
-
-Pipe.interval = function (duration, immediate = false) {
-  return new this(function (next) {
-    let n = 0;
-    if (immediate) next(n++);
-    let timer = setInterval(_ => next(n++), duration);
-    return function () {
-      if (timer) clearInterval(timer);
-    }
-  })
 };
 
 // whenever one update emit that one
@@ -164,7 +130,13 @@ Pipe.combine = function (...pipes) {
   })
 };
 
-// when all updated emit all
+
+/**
+ * When all updated emit all
+ *
+ * @param pipes
+ * @returns {Pipe}
+ */
 Pipe.zip = function (...pipes) {
   let zip = (...args) => args;
   if (typeof pipes[pipes.length - 1] === 'function') zip = pipes.pop();
@@ -184,9 +156,11 @@ Pipe.zip = function (...pipes) {
           updated[i] = true;
           updatedCount -= 1;
           if (updatedCount === 0) {
-            next(zip(...last));
+            // clean up before calling next, because it may re-entrant
             for (let i = 0; i < n; i++) updated[i] = false;
             updatedCount = n;
+
+            next(zip(...last));
           }
         }
       });
@@ -225,10 +199,26 @@ Pipe.prototype.take = function (n) {
   }));
 };
 
-Pipe.prototype.drop = function (n) {
+Pipe.prototype.drop = function (n = 1) {
   return new this.constructor(next => this.connect(v => {
     if (n > 0) n -= 1;
     else next(v);
+  }));
+};
+
+/**
+ *
+ * @param n
+ * @returns {Pipe}
+ */
+Pipe.prototype.delay = function (n = 1) {
+  let buffer = new Buffer(n);
+  return new this.constructor(next => this.connect(v => {
+    let isFull = buffer.isFull;
+    let n = buffer.first;
+    buffer.add(v);
+    // always cleanup before call next for re-entrant
+    if (isFull) next(n);
   }));
 };
 
@@ -272,63 +262,44 @@ Pipe.prototype.combine = function (...args) {
   return this.constructor.combine(this, ...args);
 };
 
+Pipe.prototype.combineObject = function (obj) {
+  let keys = Object.keys(obj);
+  let values = keys.map(k => obj[k]);
+  return this.constructor
+    .combine(...values)
+    .map(values => {
+      let res = {};
+      for (let i = 0; i < keys.length; i++) {
+        res[keys[i]] = values[i];
+      }
+      return res;
+    })
+};
+
 Pipe.prototype.zip = function (...args) {
-  return this.constructor.combine(this, ...args);
-}
-
-// emit value, then block for duration
-Pipe.prototype.debounce = function (duration) {
-  return new this.constructor(next => {
-    let timer = null;
-    let disconnect = this.connect(v => {
-      if (timer) return;
-      timer = setTimeout(_ => {
-        next(v);
-        clearTimeout(timer);
-        timer = null;
-      }, duration)
-    });
-    return function () {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      if (disconnect) {
-        disconnect();
-        disconnect = null;
-      }
-    }
-  })
+  return this.constructor.zip(this, ...args);
 };
 
-// receive value, wait for duration, emit the last
-Pipe.prototype.throttle = function (duration) {
-  return new this.constructor(next => {
-    let timer = null;
-    let last;
-    let disconnect = this.connect(v => {
-      last = v;
-      if (timer) return;
-      timer = setTimeout(_ => {
-        next(last);
-        clearTimeout(timer);
-        timer = null;
-      }, duration)
-    });
-    return function () {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
+/**
+ * From object key to value pipe, to pipe of a object key to value
+ * @param {Object} obj
+ * @returns {Pipe}
+ */
+Pipe.prototype.zipObject = function (obj) {
+  let keys = Object.keys(obj);
+  let values = keys.map(k => obj[k]);
+  return this.constructor
+    .zip(...values)
+    .map(values => {
+      let res = {};
+      for (let i = 0; i < keys.length; i++) {
+        res[keys[i]] = values[i];
       }
-      if (disconnect) {
-        disconnect();
-        disconnect = null;
-      }
-    }
-  })
+      return res;
+    })
 };
 
-Pipe.prototype.prependIterable = function (iterable) {
+Pipe.prototype.prependAll = function (iterable) {
   return new this.constructor(next => {
     for (let x of iterable) next(x);
     return this.connect(v => next(v));
@@ -336,7 +307,7 @@ Pipe.prototype.prependIterable = function (iterable) {
 };
 
 Pipe.prototype.prepend = function (...args) {
-  return this.prependIterable(args);
+  return this.prependAll(args);
 };
 
 // emit initial value
@@ -386,30 +357,39 @@ Pipe.prototype.flatten = function () {
   }));
 };
 
-// Pipe.prototype.compose = function (pipeModifier) {
-//   return pipeModifier(this);
-// };
 
+/**
+ *
+ * @param {String} key
+ * @returns {Pipe}
+ */
 Pipe.prototype.pluck = function (key) {
   return this.map(obj => obj[key]);
 };
 
-Pipe.prototype.splitKeys = function (...keys) {
+/**
+ * Unlike pluck, plucks return an array of pipe
+ * @param {...String} keys
+ * @returns {Array}
+ */
+Pipe.prototype.plucks = function (...keys) {
   return keys.map(key => {
     this.connect(obj => obj[key]);
   })
 };
 
-Pipe.prototype.toggle = function (pipe, init) {
+
+Pipe.prototype.block = function (pipe, init) {
   return new this.constructor(next => {
-    let open = init;
+    let close = !!init;
 
     // check the open first
-    let sub1 = pipe.connect(b => open = !!b);
+    let sub1 = pipe.connect(b => close = !!b);
 
     // let values flow
     let sub2 = this.connect(v => {
-      if (open) next(v)
+      if (close) return;
+      next(v)
     });
 
     return function () {
@@ -425,23 +405,23 @@ Pipe.prototype.toggle = function (pipe, init) {
   })
 };
 
-Pipe.prototype.toggleRecoverAll = function (pipe, init) {
+Pipe.prototype.blockBufferAll = function (pipe, init) {
   return new this.constructor(next => {
-    let open = init;
+    let close = !!init;
     let buffer = [];
 
     let sub1 = pipe.connect(b => {
       b = !!b;
-      if (!open && b) {
+      if (close && !b) {
         // positive edge
         for (let x of buffer) next(x);
         buffer = [];
       }
-      open = b;
+      close = b;
     });
 
     let sub2 = this.connect(v => {
-      if (open) next(v);
+      if (close) next(v);
       else buffer.push(v);
     });
 
@@ -458,25 +438,25 @@ Pipe.prototype.toggleRecoverAll = function (pipe, init) {
   });
 };
 
-Pipe.prototype.toggleRecoverLast = function (pipe, init) {
+Pipe.prototype.blockBufferLast = function (pipe, init) {
   return new this.constructor(next => {
-    let open = init;
+    let close = !!init;
     let hasLast = false;
     let last = null;
 
     let sub1 = pipe.connect(b => {
       b = !!b;
-      if (!open && b) {
+      if (close && !b) {
         // positive edge
         if (hasLast) next(last);
         hasLast = false;
         last = null;
       }
-      open = b;
+      close = b;
     });
 
     let sub2 = this.connect(v => {
-      if (open) next(v);
+      if (close) next(v);
       else {
         hasLast = true;
         last = v;
@@ -495,5 +475,9 @@ Pipe.prototype.toggleRecoverLast = function (pipe, init) {
     }
   });
 };
+
+// Pipe.prototype.compose = function (pipeModifier) {
+//   return pipeModifier(this);
+// };
 
 module.exports = Pipe;

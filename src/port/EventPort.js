@@ -8,16 +8,16 @@ const Port = require('./Port');
  */
 class EventPort extends Port {
 
-  onConnection(id, next) {
-    this._nexts.set(id, next);
-    if (this._nexts.size === 1) {
+  _onConnection(next) {
+    this._connect(next);
+    if (this.size === 1) {
       this.connectToUpstream();
     }
   }
 
-  onDisconnection(id) {
-    this._nexts.delete(id);
-    if (this._nexts.size === 0) {
+  _onDisconnection(next) {
+    this._disconnect(next);
+    if (this.size === 0) {
       this.disconnectFromUpstream();
     }
   }

@@ -9,7 +9,7 @@
     "test": "test"
   },
   "scripts": {
-    "doc": "./node_modules/.bin/jsdoc -d ./doc -r ./src -t ./node_modules/minami ./README.md",
+    "doc": "./node_modules/.bin/jsdoc -c ./jsdoc.json -d ./doc -r ./src -t ./node_modules/minami ./README.md",
     "test": "nyc mocha"
   },
   "author": "Jack Tang <me@jackhftang.com>",
