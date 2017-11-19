@@ -3,7 +3,7 @@
 ###### Reactive programming made easy
 
 [![npm version](https://badge.fury.io/js/dredd.svg)](https://www.npmjs.com/package/piport)
-
+[![Build Status](https://travis-ci.org/jackhftang/piport.svg?branch=master)](https://travis-ci.org/jackhftang/piport)
 
 
 ## Installation 
