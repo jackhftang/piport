@@ -10,7 +10,7 @@
   },
   "scripts": {
     "doc": "./node_modules/.bin/jsdoc -c ./jsdoc.json -d ./doc -r ./src -t ./node_modules/minami ./README.md",
-    "test": "nyc mocha"
+    "test": "./node_modules/.bin/nyc ./node_modules/.bin/_mocha"
   },
   "author": "Jack Tang <me@jackhftang.com>",
   "license": "MIT",
@@ -19,5 +19,8 @@
     "nyc": "^11.3.0",
     "minami": "^1.2.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "mocha": "^4.0.1",
+    "save-dev": "^2.0.0"
+  }
 }
