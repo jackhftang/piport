@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Port.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="EventPort.html">EventPort</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Pipe.html">Pipe</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#.create">create</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#connect">connect</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Port.html">Port</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="ValuePort.html">ValuePort</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Port.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const Pipe = require('./Pipe');
+
+/** Class representing a Port */
+class Port {
+  // default long living, even-like
+
+  /**
+   * @constructor
+   * @param {?Object} option
+   * @param {?Pipe} pipe
+   */
+  constructor(option = {}, pipe = Pipe.empty()) {
+    this.option = Object.assign({}, option);
+    this.count = 0;
+    this.nexts = new Map();
+    this._pipe = pipe;
+    this.disconnect = null;
+    this.onStart();
+  }
+
+  _broadcast(v) {
+    this.onBroadcast(v);
+    for (let next of this.nexts.values()) next(v);
+  }
+
+  next(v) {
+    this.onValueFromExternal(v);
+    this._broadcast(v);
+    return this;
+  }
+
+  pipe() {
+    return new Pipe(next => {
+      let id = this.count++;
+      this.onConnection(id, next);
+      return () => this.onDisconnection(id);
+    })
+  }
+
+  build(transform) {
+    let pipe = transform(this.pipe());
+    return new Port(pipe);
+  }
+
+  connect(action) {
+    let pipe = this.pipe();
+    return pipe.connect(action);
+  }
+
+  connectToUpstream() {
+    this.disconnect = this._pipe.connect(v => {
+      this.onValueFromUpstream(v);
+      this._broadcast(v);
+    });
+  }
+
+  disconnectFromUpstream() {
+    if (this.disconnect) {
+      this.disconnect();
+      this.disconnect = null;
+    }
+  }
+
+  build(transform) {
+    let pipe = transform(this.pipe());
+    return new this.constructor(pipe);
+  }
+
+  onStart() {
+  }
+
+  onConnection(id, next) {
+    this.nexts.set(id, next);
+  }
+
+  onDisconnection(id) {
+    this.nexts.delete(id);
+  }
+
+  onValueFromExternal(v) {
+    this._broadcast(v);
+  }
+
+  onValueFromUpstream(v) {
+    this._broadcast(v);
+  }
+
+  onBroadcast() {
+
+  }
+}
+
+/**
+ * Class representing an EventPort
+ *
+ * reference counted to connect/discount
+ * @extends Port
+ */
+class EventPort extends Port {
+
+  onStart() {
+    // do nothing
+  }
+
+  onConnection(id, next) {
+    this.nexts.set(id, next);
+    if (this.nexts.size === 1) {
+      this.connectToUpstream();
+    }
+  }
+
+  onDisconnection(id) {
+    this.nexts.remove(id);
+    if (this.nexts.size === 0) {
+      // todo: do this on next tick?
+      this.disconnectFromUpstream();
+    }
+  }
+
+  build(transform) {
+    let pipe = transform(this.pipe());
+    return new EventPort(pipe);
+  }
+}
+
+
+/**
+ * Class representing a ValuePort
+ *
+ * long living, connect on start, replay size of 1
+ * when historySize = 0, basically live living only
+ *
+ * @extends Port
+ */
+class ValuePort extends Port {
+
+  /**
+   *
+   *
+   * @param {?{historySize: number}} option
+   * @param {?Pipe} pipe
+   */
+  constructor(option = {}, pipe = Pipe.empty()) {
+    super(option, pipe);
+    this.option = Object.assign({historySize: 1}, this.option);
+    this.size = this.option.historySize;
+    this.ix = 0;   // position of eldest element in memory
+    this.history = [];
+  }
+
+  onStart() {
+    this.connectToUpstream();
+  }
+
+  onConnection(id, next) {
+    this.nexts.set(id, next);
+
+    // send out history immediately
+    let {history, ix, size} = this;
+    for (let i = ix; i &lt; history.length; i++) {
+      next(history[i % size]);
+    }
+  }
+
+  onBroadcast(v) {
+    let {history, ix, size} = this;
+    if (history.length &lt; size) {
+      history.push(v);
+    }
+    else if (ix &lt; size) {
+      history[ix] = v;
+      ix += 1;
+      if (ix >= size) ix -= size;
+      this.ix = ix;
+    }
+  }
+
+  build(transform) {
+    let pipe = transform(this.pipe());
+    return new this.constructor(pipe, this.option);
+  }
+}
+
+module.exports = {
+  Port,
+  EventPort,
+  ValuePort
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 17 2017 12:13:58 GMT+0800 (HKT) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

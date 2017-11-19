@@ -2,6 +2,8 @@
 
 ###### Reactive programming made easy
 
+[![npm version](https://badge.fury.io/js/dredd.svg)](https://www.npmjs.com/package/piport)
+
 
 
 ## Installation 

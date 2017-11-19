@@ -1,4 +1,45 @@
-const Buffer = require('../struct/Buffer');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>pipe/Pipe.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="EventPort.html">EventPort</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="EventPort.html#connectPromise">connectPromise</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="EventPort.html#pipe">pipe</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="EventPort.html#pipeAsync">pipeAsync</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Pipe.html">Pipe</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#.create">create</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#.empty">empty</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#.of">of</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#.zip">zip</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#delay">delay</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#flatten">flatten</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#pluck">pluck</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#plucks">plucks</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#switch">switch</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#switchObject">switchObject</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Pipe.html#zipObject">zipObject</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Port.html">Port</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Port.html#connectPromise">connectPromise</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Port.html#pipe">pipe</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Port.html#pipeAsync">pipeAsync</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="SingletonPort.html">SingletonPort</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="SingletonPort.html#connectPromise">connectPromise</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="SingletonPort.html#pipe">pipe</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="SingletonPort.html#pipeAsync">pipeAsync</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="ValuePort.html">ValuePort</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="ValuePort.html#connectPromise">connectPromise</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="ValuePort.html#pipe">pipe</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="ValuePort.html#pipeAsync">pipeAsync</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">pipe/Pipe.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const Buffer = require('../struct/Buffer');
 
 /** Class representing a pipe */
 class Pipe {
@@ -81,7 +122,7 @@ Pipe.from = function (iterable) {
 
 Pipe.range = function (start, end, step = 1) {
   return new this(function (next) {
-    for (let i = start; i < end; i += step) next(i);
+    for (let i = start; i &lt; end; i += step) next(i);
     return function () {
     };
   });
@@ -110,7 +151,7 @@ Pipe.combine = function (...pipes) {
     let updatedCount = n;
     let last = new Array(n);
     let disconnects = [];
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i &lt; n; i++) {
       let pipe = pipes[i];
       updated.push(false);
       disconnects.push(pipe.connect(v => {
@@ -147,7 +188,7 @@ Pipe.zip = function (...pipes) {
     let last = new Array(n);
     let disconnects = new Array(n);
 
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i &lt; n; i++) {
       let pipe = pipes[i];
       updated[i] = false;
       disconnects[i] = pipe.connect(v => {
@@ -157,7 +198,7 @@ Pipe.zip = function (...pipes) {
           updatedCount -= 1;
           if (updatedCount === 0) {
             // clean up before calling next, because it may re-entrant
-            for (let i = 0; i < n; i++) updated[i] = false;
+            for (let i = 0; i &lt; n; i++) updated[i] = false;
             updatedCount = n;
 
             next(zip(...last));
@@ -186,7 +227,7 @@ Pipe.prototype.constant = function (x) {
 
 Pipe.prototype.repeat = function (n) {
   return new this.constructor(next => this.connect(v => {
-    for (let i = 0; i < n; i++) next(v);
+    for (let i = 0; i &lt; n; i++) next(v);
   }))
 };
 
@@ -239,7 +280,7 @@ Pipe.prototype.distinct = function (prev) {
 Pipe.prototype.takeWhile = function (predicate) {
   let pass = true;
   return new this.constructor(next => this.connect(v => {
-    if (pass = pass && predicate(v)) next(v);
+    if (pass = pass &amp;&amp; predicate(v)) next(v);
   }));
 };
 
@@ -277,7 +318,7 @@ Pipe.prototype.combineObject = function (obj) {
     .combine(...values)
     .map(values => {
       let res = {};
-      for (let i = 0; i < keys.length; i++) {
+      for (let i = 0; i &lt; keys.length; i++) {
         res[keys[i]] = values[i];
       }
       return res;
@@ -300,7 +341,7 @@ Pipe.prototype.zipObject = function (obj) {
     .zip(...values)
     .map(values => {
       let res = {};
-      for (let i = 0; i < keys.length; i++) {
+      for (let i = 0; i &lt; keys.length; i++) {
         res[keys[i]] = values[i];
       }
       return res;
@@ -439,7 +480,7 @@ Pipe.prototype.blockBufferAll = function (pipe, init) {
 
     let sub1 = pipe.connect(b => {
       b = !!b;
-      if (close && !b) {
+      if (close &amp;&amp; !b) {
         // positive edge
         for (let x of buffer) next(x);
         buffer = [];
@@ -473,7 +514,7 @@ Pipe.prototype.blockBufferLast = function (pipe, init) {
 
     let sub1 = pipe.connect(b => {
       b = !!b;
-      if (close && !b) {
+      if (close &amp;&amp; !b) {
         // positive edge
         if (hasLast) next(last);
         hasLast = false;
@@ -507,4 +548,22 @@ Pipe.prototype.blockBufferLast = function (pipe, init) {
 //   return pipeModifier(this);
 // };
 
-module.exports = Pipe;
+module.exports = Pipe;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Nov 19 2017 20:59:02 GMT+0800 (HKT) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

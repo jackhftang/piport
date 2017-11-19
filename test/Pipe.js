@@ -249,7 +249,7 @@ describe('Pipe', function () {
     describe('zip', function () {
 
       it('combine [1,2,3] and [4,5,6] with a+b', function () {
-        test([1, 2, 3], [7, 8, 9], function (pipe) {
+        test([1, 2, 3], [7], function (pipe) {
           return pipe.zip(Pipe.from([4, 5, 6]), (a, b) => a + b);
         });
       })

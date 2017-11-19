@@ -1,5 +1,6 @@
 const Pipe = require('../pipe/Pipe');
 const AsyncPipe = require('../pipe/AsyncPipe');
+const PortInterface = require('./PortInterface');
 
 /** Class representing a Port */
 class Port {
@@ -16,16 +17,52 @@ class Port {
     this._disconnectUpstream = null;
     this._pipe = null;
     this._asyncPipe = null;
+    this._interface = null;
     this._nexts = new Set();
+    // todo: support disconnect?
+    // this._disconnects = null
   }
 
-  get size() {
-    return this._nexts.size;
+  ///////////////////////////////////////////////////////////
+  // public methods for external
+
+  // suggested name: sync, build, link, port, create, clone, pipe, spawn
+  /**
+   *
+   * @param transform
+   * @returns {Port}
+   */
+  pipe(transform) {
+    let pipe = this._getSyncPipe();
+    if (typeof transform === 'function') pipe = transform(pipe);
+    return new this.constructor(this.option, pipe);
   }
 
-  next(v) {
-    this._onValueFromExternal(v);
-    return this;
+  /**
+   *
+   * @param transform
+   * @returns {Port}
+   */
+  pipeAsync(transform) {
+    let pipe = this._getAsyncPipe();
+    if (typeof transform === 'function') pipe = transform(pipe);
+    return new this.constructor(this.option, pipe);
+  }
+
+  map(f) {
+    return this.pipe(h => h.map(f));
+  }
+
+  mapAsync(f) {
+    return this.pipeAsync(h => h.map(f));
+  }
+
+  mapIterable(f) {
+    return this.pipe(h => h.mapIterable(f));
+  }
+
+  mapIterableAsync(f) {
+    return this.pipeAsync(h => h.mapIterable(f));
   }
 
   connect(next) {
@@ -71,6 +108,23 @@ class Port {
     );
   }
 
+  ///////////////////////////////////////////////////////////
+  // public methods for internal
+
+  get size() {
+    return this._nexts.size;
+  }
+
+  interface() {
+    let self = this;
+    return this._interface || (this._interface = new PortInterface((this)));
+  }
+
+  next(v) {
+    this._onValueFromExternal(v);
+    return this;
+  }
+
   connectToUpstream() {
     if (!this._disconnectUpstream && this._upstream) {
       this._disconnectUpstream = this._upstream.connect(v => {
@@ -86,18 +140,8 @@ class Port {
     }
   }
 
-  // suggested name: sync, build, link, port, create, clone, pipe, spawn
-  pipe(transform) {
-    let pipe = this._getSyncPipe();
-    if (typeof transform === 'function') pipe = transform(pipe);
-    return new this.constructor(this.option, pipe);
-  }
-
-  pipeAsync(transform) {
-    let pipe = this._getAsyncPipe();
-    if (typeof transform === 'function') pipe = transform(pipe);
-    return new this.constructor(this.option, pipe);
-  }
+  ///////////////////////////////////////////////////////////
+  // private methods
 
   _getSyncPipe() {
     return this._pipe || (this._pipe = new Pipe(next => {
